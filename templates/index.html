@@ -1,0 +1,22 @@
+<!-- upload.html -->
+<head>
+    <title>Upload File</title>
+    <link rel="stylesheet" href="{{ url_for('serve_css') }}">
+</head>
+<h1>Upload File</h1>
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.file.label }}: {{ form.file() }}
+        {% if form.file.errors %}
+            <ul class="errors">
+                {% for error in form.file.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    <div>
+        {{ form.submit() }}
+    </div>
+</form>
