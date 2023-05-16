@@ -1,12 +1,10 @@
 from flask import Flask, render_template, request
 from flask_wtf import FlaskForm
-from wtforms import FileField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import FileField, FloatField
+from wtforms.validators import DataRequired, NumberRange
 import pandas as pd
 import plotly.graph_objects as go
-import numpy as np
 import os
-import math
 
 app = Flask(__name__)
 app.static_folder = 'static'
@@ -14,32 +12,35 @@ app.static_folder = 'static'
 # Set a secret key for form CSRF protection
 app.secret_key = os.getenv('SECRET_KEY')
 
-
 @app.route('/static/css/styles.css')
 def serve_css():
     return app.send_static_file('css/tailwind.css')
 
-
-# file - file upload input
-# submit - form submission button
-# DataRequired - ensures the field is not empty
 class UploadForm(FlaskForm):
-    file = FileField('Upload File', validators=[DataRequired()])
-    submit = SubmitField('Submit')
+    file = FileField('Select a file', validators=[DataRequired()])
+    tolerance = FloatField('Tolerance', validators=[DataRequired(), NumberRange(min=0.0, max=5.0)])
 
-def is_bedford_law_valid(observed_percentages):
-    print("observed_percentages::::", observed_percentages)
-    expected_percentages = np.array([0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046])
-    print("len(expected_percentages)", len(expected_percentages))
-    tolerance = 0.01
-    
-    observed_percentages_rounded = np.round(observed_percentages, 2)
-    print("observed_percentages_rounded", len(observed_percentages_rounded))
-    diff = np.abs(observed_percentages_rounded - expected_percentages)
-    within_range = np.logical_and(diff >= -tolerance, diff <= tolerance)
-    valid_bedford = np.all(within_range)
+def is_bedford_law_valid(observed_percentages, tolerance):
+    # Expected percentage of digit 1 in the first position
+    expected_percentage_1 = 30  
+
+    # User defined tolerance from form
+    tolerance = tolerance 
+
+    # Percentage of digit 1 in the first position
+    observed_percentage_1 = observed_percentages[0]
+
+    # Difference between expected and observed  
+    diff = abs(observed_percentage_1 - expected_percentage_1) 
+
+    # Check if difference is within tolerance
+    within_range = -tolerance <= diff <= tolerance 
+
+    # Bedford's Law is valid if the difference is within tolerance
+    valid_bedford = within_range  
+
+    # Return validation result
     return valid_bedford
-
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -50,23 +51,29 @@ def upload_file():
 
         # Extract the first digit from each number
         data = df['7_2009'].astype(str).str[0]
-        
-        digit_counts = data.value_counts().sort_index()
 
         # Calculate the count of each digit
-        # if 0 not in digit_counts.index:
-        #     digit_counts = pd.concat([digit_counts, pd.Series(0, index=[0])])
+        data = data[data.isin(['1', '2', '3', '4', '5', '6', '7', '8', '9'])]
+        
+        # Calculate the count of each unique value in data
+        digit_counts = data.value_counts().sort_index()
 
-
+        # Create a list of values 1-9
         x = list(range(1, 10))
 
+        # Calculate the total of all digits
         total_count = digit_counts.sum()
-        percentages = digit_counts / total_count * 100
-        print("percentages::::", percentages)
 
+        # Calculate the percentage of occurance for each digit
+        percentages = digit_counts / total_count * 100
+
+        # Create the x axis labels
         digit_labels = [str(i) for i in x]
 
-        # Create a Plotly figure
+        # Get the tolerance from the form
+        tolerance = form.tolerance.data
+
+        # Create the bars for the chart
         trace = go.Bar(
             x=x,
             y=percentages,
@@ -76,8 +83,10 @@ def upload_file():
             textposition='auto'
         )
 
+        # Create a list with the trace object
         data = [trace]
 
+        # Specify the settings for the chart
         layout = go.Layout(
             title='Observed Distribution',
             xaxis=dict(
@@ -94,19 +103,20 @@ def upload_file():
             height=600
         )
 
+        # Use the data and layout objects to create the renderale chart
         fig = go.Figure(data=data, layout=layout)
 
-        # Generate HTML code for the plotly graph
+        # Convert the fig object to embeddable HTML
         plot_html = fig.to_html(full_html=False, default_width='100%', default_height='100%')
 
         # Validate Bedford's Law
-        valid_bedford = is_bedford_law_valid(percentages)
-        print("valid_bedford", valid_bedford)
+        valid_bedford = is_bedford_law_valid(percentages, tolerance)
 
-        return render_template('index.html', form=form, plot_html=plot_html, valid_bedford=valid_bedford)
+        # Return data to the template
+        return render_template('index.html', form=form, plot_html=plot_html, valid_bedford=valid_bedford, tolerance=tolerance)
 
+    # Return the template with the form
     return render_template('index.html', form=form)
-
 
 if __name__ == '__main__':
     app.run()
