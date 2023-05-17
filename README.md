@@ -5,4 +5,4 @@ provides a dynamically generated chart with the observed distribution of numbers
 You can view the deployed code here: 
 https://bedford-analysis.herokuapp.com/
 
-For a sample CSV to use with the project, download: [Download Sample CSV](census_2009b.csv)
+For a sample CSV to use with the project, see: [Download Sample CSV](census_2009b.csv)
