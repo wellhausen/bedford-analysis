@@ -106,26 +106,38 @@ def upload_file():
         total_count = digit_counts.sum()
 
         # Calculate the percentage of occurance for each digit
-        percentages = digit_counts / total_count * 100
+        observed_percentages = digit_counts / total_count * 100
 
         # Create the x axis labels
         digit_labels = [str(i) for i in x]
 
         # Get the tolerance from the form
         tolerance = form.tolerance.data
+        
+        # Create a list with the expected percentages
+        expected_percentages = [30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.6]
 
         # Create the bars for the chart
-        trace = go.Bar(
+        trace_observed = go.Bar(
             x=x,
-            y=percentages,
-            name='Observed Distribution',
+            y=observed_percentages,
+            name='Observed',
             marker=dict(color='blue'),
-            text=percentages.round(2),
+            text=observed_percentages.round(2),
+            textposition='auto'
+        )
+
+        trace_expected = go.Bar(
+            x=x,
+            y=expected_percentages,
+            name='Expected',
+            marker=dict(color='red'),
+            text=[f'{p:.2f}%' for p in expected_percentages],
             textposition='auto'
         )
 
         # Create a list with the trace object
-        data = [trace]
+        data = [trace_observed, trace_expected]
 
         # Specify the settings for the chart
         layout = go.Layout(
@@ -151,7 +163,7 @@ def upload_file():
         plot_html = fig.to_html(full_html=False, default_width='100%', default_height='100%')
 
         # Validate Bedford's Law
-        valid_bedford = is_bedford_law_valid(percentages, tolerance)
+        valid_bedford = is_bedford_law_valid(observed_percentages, tolerance)
 
         # Return data to the template
         return render_template('index.html', form=form, plot_html=plot_html, valid_bedford=valid_bedford, tolerance=tolerance)
