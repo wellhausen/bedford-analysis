@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from flask_wtf import FlaskForm
-from wtforms import FileField, FloatField
+from wtforms import FileField, FloatField, StringField
 from wtforms.validators import DataRequired, NumberRange
 import pandas as pd
 import plotly.graph_objects as go
@@ -19,6 +19,7 @@ def serve_css():
 class UploadForm(FlaskForm):
     file = FileField('Select a file', validators=[DataRequired()])
     tolerance = FloatField('Tolerance', validators=[DataRequired(), NumberRange(min=0.0, max=5.0)])
+    target_column = StringField('Target Column', default='7_2009', description='Leave blank for default (7_2009)')
 
 def is_bedford_law_valid(observed_percentages, tolerance):
     # Expected percentage of digit 1 in the first position
@@ -47,7 +48,47 @@ def upload_file():
     form = UploadForm()
     if form.validate_on_submit():
         file = form.file.data
-        df = pd.read_csv(file, sep='\t')
+        file_extension = os.path.splitext(file.filename)[1]
+
+        # Determine the file type and read the data
+        if file_extension == '.csv':
+            try:
+                df = pd.read_csv(file, sep='\t')
+            except Exception as e:
+                print(f"Error reading CSV file: {e}")
+        elif file_extension in ['.xls', '.xlsx']:
+            try:
+                df = pd.read_excel(file)
+            except Exception as e:
+                print(f"Error reading Excel file: {e}")
+        elif file_extension == '.parquet':
+            try:
+                df = pd.read_parquet(file)
+            except Exception as e:
+                print(f"Error reading Parquet file: {e}")
+        elif file_extension == '.orc':
+            try:
+                df = pd.read_orc(file)
+            except Exception as e:
+                print(f"Error reading ORC file: {e}")
+        elif file_extension == '.feather':
+            try:
+                df = pd.read_feather(file)
+            except Exception as e:
+                print(f"Error reading Feather file: {e}")
+        elif file_extension == '.h5':
+            try:
+                df = pd.read_hdf(file)
+            except Exception as e:
+                print(f"Error reading HDF file: {e}")
+        elif file_extension == '.json':
+            try:
+                df = pd.read_json(file)
+            except Exception as e:
+                print(f"Error reading JSON file: {e}")
+        else:
+            print("Unknown file type")
+        
 
         # Extract the first digit from each number
         data = df['7_2009'].astype(str).str[0]

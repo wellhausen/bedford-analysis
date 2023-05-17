@@ -42,6 +42,18 @@
       </ul>
       {% endif %}
     </div>
+    <div class="mb-4">
+      <label for="target_column" class="block mb-2">Target Column:</label>
+      <input type="text" name="target_column" id="target_column" class="border px-4 py-2 rounded-lg">
+      <small class="form-text text-muted block">{{ form.target_column.description }}</small>
+      {% if form.target_column.errors %}
+      <ul class="errors">
+        {% for error in form.target_column.errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
     <div>
       <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Upload</button>
     </div>
