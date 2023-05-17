@@ -2,6 +2,5 @@
 node_modules/
 .venv
 __pycache__/
-census_2009b.csv
 .vscode/
 ```
