@@ -141,7 +141,7 @@ def upload_file():
 
         # Specify the settings for the chart
         layout = go.Layout(
-            title='Observed Distribution',
+            title='Observed Distribution / Expected Distribution',
             xaxis=dict(
                 title='First Digit Percentage Totals',
                 tickmode='array',

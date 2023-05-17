@@ -68,9 +68,9 @@
   {% if valid_bedford is defined%}
   <div class="validation-status ml-8">
     {% if valid_bedford %}
-    <p class="text-green-500">The observed distribution follows Bedford's Law with a tolerance of {{ tolerance }}.</p>
+    <p class="text-green-500 text-base font-medium">The observed distribution follows Bedford's Law with a tolerance of {{ tolerance }}.</p>
     {% else %}
-    <p class="text-red-500">The observed distribution does not follow Bedford's Law with a tolerance of {{ tolerance }}.</p>
+    <p class="text-red-500 text-base font-medium">The observed distribution does not follow Bedford's Law with a tolerance of {{ tolerance }}.</p>
     {% endif %}
   </div>
   {% endif %}
